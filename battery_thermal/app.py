@@ -31,7 +31,6 @@ that cache -- no recomputation happens while exploring the timeline.
 
 import numpy as np
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 import dash
 from dash import dcc, html, Input, Output, State, ctx
@@ -229,14 +228,23 @@ panel_a = dbc.Card(
     className="viz-card mb-2",
 )
 
-panel_b = dbc.Card(
-    dbc.CardBody([
-        html.H5("Transient Response", className="panel-title"),
-        dcc.Loading(dcc.Graph(id="transient-graph", style={"height": GRAPH_HEIGHT}),
-                     type="circle", color="#ef4444"),
-    ]),
-    className="viz-card",
-)
+TRANSIENT_GRAPH_HEIGHT = "260px"
+
+
+def _transient_panel(graph_id, title):
+    return dbc.Card(
+        dbc.CardBody([
+            html.H5(title, className="panel-title"),
+            dcc.Loading(dcc.Graph(id=graph_id, style={"height": TRANSIENT_GRAPH_HEIGHT}),
+                         type="circle", color="#ef4444"),
+        ]),
+        className="viz-card mb-2",
+    )
+
+
+panel_tmax = _transient_panel("tmax-graph", "Max Temperature")
+panel_tavg = _transient_panel("tavg-graph", "Average Temperature")
+panel_soc = _transient_panel("soc-graph", "State of Charge")
 
 panel_report = dbc.Card(
     dbc.CardBody([
@@ -270,7 +278,9 @@ app.layout = dbc.Container([
             playback_bar,
             summary_strip,
             panel_a,
-            panel_b,
+            panel_tmax,
+            panel_tavg,
+            panel_soc,
         ], width=12, lg=6),
         dbc.Col(right_col, width=12, lg=3, className="side-col"),
     ], className="g-3"),
@@ -343,9 +353,10 @@ def _volume_figure(store, mode, frame_idx, meta):
     return fig
 
 
-def _transient_figure(store, modes, frame_idx, max_cell_temp=None):
-    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.06,
-                         subplot_titles=("Max Temperature", "Average Temperature", "State of Charge"))
+def _single_transient_figure(store, modes, frame_idx, metric_key, y_title,
+                              scale=1.0, max_cell_temp=None, show_legend=True):
+    """One metric (tmax / tavg / soc) vs time, one line per cooling mode."""
+    fig = go.Figure()
 
     cursor_t = None
     for mode in modes:
@@ -356,41 +367,34 @@ def _transient_figure(store, modes, frame_idx, max_cell_temp=None):
         if cursor_t is None and frame_idx < len(times):
             cursor_t = times[frame_idx]
 
-        fig.add_trace(go.Scatter(x=times, y=d["tmax"], mode="lines", name=label,
-                                  legendgroup=mode, line=dict(color=color)), row=1, col=1)
-        fig.add_trace(go.Scatter(x=times, y=d["tavg"], mode="lines", name=label,
-                                  legendgroup=mode, showlegend=False,
-                                  line=dict(color=color)), row=2, col=1)
-        fig.add_trace(go.Scatter(x=times, y=[s * 100 for s in d["soc"]], mode="lines", name=label,
-                                  legendgroup=mode, showlegend=False,
-                                  line=dict(color=color)), row=3, col=1)
+        y = [v * scale for v in d[metric_key]]
+        fig.add_trace(go.Scatter(x=times, y=y, mode="lines", name=label,
+                                  legendgroup=mode, showlegend=show_legend,
+                                  line=dict(color=color)))
 
-    # add_hline/add_vline resolve row/col against EXISTING traces' axes -- called
-    # on an empty subplot (no traces yet) they silently no-op, so this must run
-    # after the trace-adding loop above.
+    # add_hline/add_vline resolve against EXISTING traces' axes -- called on an
+    # empty figure (no traces yet) they silently no-op, so this must run after
+    # the trace-adding loop above.
     if max_cell_temp is not None:
         fig.add_hline(y=max_cell_temp, line_width=1.5, line_dash="dot",
-                      line_color="rgba(139,30,47,0.75)", row=1, col=1,
+                      line_color="rgba(139,30,47,0.75)",
                       annotation_text="max cell temp limit", annotation_position="top left",
                       annotation_font=dict(size=10, color="rgba(139,30,47,0.9)"))
 
     if cursor_t is not None:
-        for r in (1, 2, 3):
-            fig.add_vline(x=cursor_t, line_width=1.5, line_dash="dash",
-                          line_color="rgba(43,40,32,0.45)", row=r, col=1)
+        fig.add_vline(x=cursor_t, line_width=1.5, line_dash="dash",
+                      line_color="rgba(43,40,32,0.45)")
 
-    fig.update_yaxes(title_text="°C", row=1, col=1)
-    fig.update_yaxes(title_text="°C", row=2, col=1)
-    fig.update_yaxes(title_text="SoC (%)", row=3, col=1)
-    fig.update_xaxes(title_text="Time (s)", row=3, col=1)
+    fig.update_yaxes(title_text=y_title)
+    fig.update_xaxes(title_text="Time (s)")
 
     fig.update_layout(
         template="plotly_white",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#2b2820", family="Source Serif 4, Georgia, serif"),
-        margin=dict(l=10, r=10, t=40, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.06, xanchor="right", x=1,
+        margin=dict(l=10, r=10, t=10, b=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="right", x=1,
                     bgcolor="rgba(0,0,0,0)", font=dict(color="#2b2820")),
         hovermode="x unified",
         hoverlabel=dict(bgcolor="#fdfbf5", font=dict(color="#2b2820"), bordercolor="#ddd6c8"),
@@ -562,7 +566,9 @@ def download_report(n_clicks, sim_results, ctx):
 
 @app.callback(
     Output("volume-graph", "figure"),
-    Output("transient-graph", "figure"),
+    Output("tmax-graph", "figure"),
+    Output("tavg-graph", "figure"),
+    Output("soc-graph", "figure"),
     Output("time-readout", "children"),
     Input("timestep-slider", "value"),
     Input("sim-store", "data"),
@@ -571,8 +577,8 @@ def download_report(n_clicks, sim_results, ctx):
 )
 def update_visuals(frame_idx, store, modes, max_cell_temp):
     if not store or "meta" not in store:
-        return _empty_fig("Run a simulation to see the 3D thermal field"), \
-               _empty_fig("Run a simulation to see transient plots"), ""
+        empty = _empty_fig("Run a simulation to see transient plots")
+        return _empty_fig("Run a simulation to see the 3D thermal field"), empty, empty, empty, ""
 
     active_modes = [m for m in (modes or []) if m in store and m != "meta"]
     if not active_modes:
@@ -582,11 +588,16 @@ def update_visuals(frame_idx, store, modes, max_cell_temp):
     frame_idx = int(np.clip(frame_idx or 0, 0, n_frames - 1))
 
     vol_fig = _volume_figure(store, active_modes[0], frame_idx, store["meta"])
-    trans_fig = _transient_figure(store, active_modes, frame_idx, max_cell_temp)
+    tmax_fig = _single_transient_figure(store, active_modes, frame_idx, "tmax", "°C",
+                                         max_cell_temp=max_cell_temp, show_legend=True)
+    tavg_fig = _single_transient_figure(store, active_modes, frame_idx, "tavg", "°C",
+                                         show_legend=False)
+    soc_fig = _single_transient_figure(store, active_modes, frame_idx, "soc", "SoC (%)",
+                                        scale=100.0, show_legend=False)
 
     t_sec = store[active_modes[0]]["times"][frame_idx]
     readout = f"t = {t_sec:6.0f} s  |  frame {frame_idx}/{n_frames - 1}"
-    return vol_fig, trans_fig, readout
+    return vol_fig, tmax_fig, tavg_fig, soc_fig, readout
 
 
 @app.callback(
@@ -664,14 +675,18 @@ def toggle_play(n_clicks, disabled):
 @app.callback(
     Output("timestep-slider", "value", allow_duplicate=True),
     Input("play-interval", "n_intervals"),
-    Input("transient-graph", "clickData"),
+    Input("tmax-graph", "clickData"),
+    Input("tavg-graph", "clickData"),
+    Input("soc-graph", "clickData"),
     State("timestep-slider", "value"),
     State("timestep-slider", "max"),
     prevent_initial_call=True,
 )
-def advance_or_seek(n_intervals, click_data, current, max_val):
+def advance_or_seek(n_intervals, tmax_click, tavg_click, soc_click, current, max_val):
     trigger = ctx.triggered_id
-    if trigger == "transient-graph" and click_data:
+    click_data = {"tmax-graph": tmax_click, "tavg-graph": tavg_click,
+                  "soc-graph": soc_click}.get(trigger)
+    if click_data:
         point = click_data["points"][0]
         # curveNumber-agnostic: every trace shares the same x-axis (time), so
         # the point's index within its own trace is also the target frame index
