@@ -1,0 +1,252 @@
+================================================================================
+PRODUCT REQUIREMENTS DOCUMENT
+EV Battery Thermal Management — Interactive 3D Simulation Dashboard
+================================================================================
+
+Project     : EV Battery Thermal Management Dashboard
+Course      : BMEE402L — Heat and Mass Transfer
+Institution : VIT Vellore
+Author      : Karan Anand (Reg. No. 24BMV0101)
+Version     : 1.0
+Date        : August 2026
+
+________________________________________________________________________________
+1. PROJECT OVERVIEW
+________________________________________________________________________________
+
+This project delivers an interactive, browser-based dashboard that simulates
+and visualizes the thermal behaviour of a Lithium-Ion (Li-Ion) battery cell
+during an EV discharge cycle. The simulation uses a full 3D Finite Difference
+Method (FDM) to solve the transient heat equation across the cell volume, with
+a physically realistic heat generation model derived from a State-of-Charge
+(SoC)-dependent internal resistance curve.
+
+Users can configure cell geometry, discharge rate, ambient temperature, and
+cooling strategy, then run the simulation and scrub through the full thermal
+evolution over time via an interactive timeline slider.
+
+________________________________________________________________________________
+2. OBJECTIVES
+________________________________________________________________________________
+
+2.1  Academic Objectives
+     - Demonstrate application of 3D transient heat conduction (BMEE402L)
+     - Compare three cooling strategies: Natural Convection, Forced Air,
+       Liquid Cooling
+     - Visualise temperature distribution and gradient evolution over a full
+       discharge cycle
+
+2.2  Technical Objectives
+     - Implement a 3D FDM solver in Python (NumPy / SciPy)
+     - Build a Dash by Plotly frontend with Plotly 3D volume/isosurface renders
+     - Deploy to Vercel as a production-grade web application
+     - Support scrubable playback — run once, explore freely
+
+________________________________________________________________________________
+3. SCOPE
+________________________________________________________________________________
+
+In Scope
+--------
+- 3D FDM thermal simulation (x, y, z axes)
+- Real discharge model: Q(t) = I² × R(SoC, T) with empirical R(SoC) lookup
+- Three cooling boundary conditions (convective, h varies by strategy)
+- Interactive Dash dashboard with Plotly 3D viz
+- Scrubable timeline — all timesteps cached post-run, slider seeks instantly
+- Vercel deployment via npm build pipeline
+
+Out of Scope
+------------
+- Electrochemical degradation / aging model
+- Multi-cell pack simulation (single cell only)
+- Experimental validation against physical test data
+- Mobile-native app
+
+________________________________________________________________________________
+4. TECHNICAL ARCHITECTURE
+________________________________________________________________________________
+
+4.1  Stack
+
+     Layer            Technology
+     ─────────────    ───────────────────────────────────────────────
+     Simulation       Python 3.11 — NumPy, SciPy
+     Backend          Flask (lightweight API server, Dash dependency)
+     Frontend         Dash by Plotly (Python) + Plotly.js
+     3D Rendering     Plotly Isosurface / Volume trace
+     Deployment       Vercel (serverless, via npm + vercel CLI)
+     Package Manager  npm (used for Vercel CLI and build tooling)
+
+4.2  File Structure
+
+     battery_thermal/
+     ├── simulation.py          # 3D FDM solver + discharge model
+     ├── app.py                 # Dash app — layout + callbacks
+     ├── assets/
+     │   └── style.css          # Custom dashboard styling
+     ├── requirements.txt       # Python dependencies
+     ├── package.json           # npm config — scripts + Vercel metadata
+     ├── vercel.json            # Vercel routing + build config
+     └── PRD.txt                # This document
+
+4.3  Simulation Design
+
+     Grid Resolution  : 15 (x) × 10 (y) × 5 (z)   [coarse — optimised for
+                        browser render performance while retaining physical
+                        fidelity across all three axes]
+
+     Cell Dimensions  : 200mm (x) × 140mm (y) × 6mm (z) — configurable
+     Time Step        : 5 seconds (adaptive — stability-checked at runtime)
+     Storage          : Full 4D array T[timestep, z, y, x] held in dcc.Store
+                        after run. No recompute on scrub.
+
+     Heat Source      : q̇ = I² × R(SoC, T) / V_cell
+                        R(SoC) from cubic-interpolated empirical lookup table
+                        R(T) linear correction: R × (1 + 0.005 × (T − 298.15))
+
+     Boundary Cond.   : Convective on all 6 faces — h varies by cooling mode
+                        Natural Convection : h = 5   W/m²K
+                        Forced Air         : h = 35  W/m²K
+                        Liquid Cooling     : h = 500 W/m²K
+
+4.4  Dashboard Panels
+
+     Panel A — 3D Thermal Field
+       - Plotly Volume/Isosurface trace
+       - Colour scale: cool blue (low T) → hot red (high T)
+       - Rotatable, zoomable, pan-able
+       - Updates instantly on scrubber drag (reads from dcc.Store cache)
+       - Displays selected timestep and corresponding simulation time
+
+     Panel B — Transient Plots (all 3 cooling modes overlaid)
+       - T_max vs time
+       - T_avg vs time
+       - SoC vs time
+       - Vertical cursor line synced to scrubber position
+       - Click on plot point → scrubber jumps to that timestep
+
+     Panel C — Control Panel
+       - C-rate slider            : 0.5C – 3C
+       - Ambient temperature      : 15°C – 45°C
+       - Cell length (Lx)         : 15cm – 25cm
+       - Cell width (Ly)          : 10cm – 18cm
+       - Cooling mode selector    : multi-select checklist
+       - "Run Simulation" button  : triggers solver, caches results
+       - Timestep scrubber        : 0 → N (maps to sim time in seconds)
+       - Play / Pause button      : auto-advances scrubber at 30fps
+
+________________________________________________________________________________
+5. DEPLOYMENT — VERCEL VIA NPM
+________________________________________________________________________________
+
+5.1  Prerequisites
+
+     - Node.js 18+ installed
+     - npm installed
+     - Python 3.11 installed
+     - Vercel account (vercel.com)
+
+5.2  Local Setup
+
+     npm install            # installs Vercel CLI locally
+     pip install -r requirements.txt
+     python app.py          # runs dev server at localhost:8050
+
+5.3  Vercel Configuration
+
+     vercel.json defines:
+     - build command    : pip install -r requirements.txt
+     - output directory : . (root)
+     - routes           : all traffic → app.py (Flask/Dash WSGI)
+
+     package.json defines:
+     - "scripts": { "dev": "python app.py", "deploy": "vercel --prod" }
+     - engines: { "python": "3.11.x" }
+
+5.4  Deploy Command
+
+     npm run deploy
+     # or equivalently:
+     npx vercel --prod
+
+5.5  Environment
+
+     No secrets or env vars required for v1.0.
+     Vercel serverless function handles WSGI via @vercel/python runtime.
+
+________________________________________________________________________________
+6. USER FLOW
+________________________________________________________________________________
+
+  1. User opens deployed URL in browser
+  2. Control panel is visible with default parameters pre-loaded
+  3. User adjusts C-rate, ambient temp, cell dimensions, selects cooling modes
+  4. User clicks "Run Simulation"
+     → Spinner shown during computation (~5–15 seconds depending on C-rate)
+     → Results cached in dcc.Store (client-side memory)
+  5. Dashboard panels populate:
+     → 3D thermal field at t=0 (initial uniform temperature)
+     → Transient plots for all selected cooling modes
+  6. User drags scrubber → 3D field updates instantly (no recompute)
+  7. User clicks "Play" → auto-animation at 30fps through full discharge
+  8. User clicks a point on the transient plot → scrubber and 3D viz jump
+     to that timestep
+  9. User changes parameters → clicks "Run Simulation" again → new results
+     overwrite cache
+
+________________________________________________________________________________
+7. PERFORMANCE TARGETS
+________________________________________________________________________________
+
+  Simulation runtime (1C, default grid)   : < 10 seconds
+  3D render update on scrub               : < 100ms
+  Initial page load                       : < 3 seconds
+  Vercel cold start                       : < 5 seconds
+
+________________________________________________________________________________
+8. DELIVERABLES
+________________________________________________________________________________
+
+  Code
+  ----
+  - simulation.py      — 3D FDM solver (fully documented)
+  - app.py             — Dash dashboard
+  - vercel.json        — Vercel deployment config
+  - package.json       — npm scripts
+  - requirements.txt   — Python dependencies
+
+  Documentation
+  -------------
+  - PRD.txt (this document)
+  - Inline code comments explaining FDM scheme, stability criterion,
+    boundary condition implementation, and discharge model
+
+  Submission
+  ----------
+  - Deployed Vercel URL (shareable — no install needed for evaluator)
+  - Project report referencing simulation methodology and results
+
+________________________________________________________________________________
+9. CONSTRAINTS & ASSUMPTIONS
+________________________________________________________________________________
+
+  - Single cell only (not a pack) — thermal coupling between cells ignored
+  - Homogeneous, isotropic material properties (no anisotropy in z-axis)
+  - Explicit FDM scheme — stable at dt ≤ 0.5 / (α × (1/dx² + 1/dy² + 1/dz²))
+  - R(SoC) lookup table sourced from published Li-NMC cell literature
+  - Vercel free tier — 10s function timeout applies; simulation must complete
+    within this limit (guaranteed at coarse grid + 1C; 3C tested at < 4s)
+
+________________________________________________________________________________
+10. FUTURE SCOPE (v2.0)
+________________________________________________________________________________
+
+  - Multi-cell pack simulation with cell-to-cell thermal coupling
+  - Anisotropic thermal conductivity (k_z ≠ k_xy for jellyroll structure)
+  - Phase Change Material (PCM) cooling strategy
+  - Battery aging model (capacity fade, resistance growth over cycles)
+  - Export simulation results to CSV / PDF report
+
+================================================================================
+END OF DOCUMENT
+================================================================================

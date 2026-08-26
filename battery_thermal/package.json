@@ -1,0 +1,16 @@
+{
+  "name": "battery-thermal-dashboard",
+  "version": "1.0.0",
+  "description": "EV Battery Thermal Management -- Interactive 3D Simulation Dashboard (BMEE402L, VIT Vellore)",
+  "private": true,
+  "scripts": {
+    "dev": "python app.py",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "python": "3.11.x"
+  },
+  "devDependencies": {
+    "vercel": "^37.0.0"
+  }
+}
