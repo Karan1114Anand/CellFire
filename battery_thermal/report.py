@@ -99,7 +99,7 @@ def compute_mode_metrics(results, ctx):
             t_discharge = d["times"][-1]
 
         out.append(dict(
-            mode=m, label=sim.COOLING_LABELS[m], h=sim.COOLING_H[m], color=sim.COOLING_COLORS[m],
+            mode=m, label=sim.COOLING_LABELS[m], h=sim.COOLING_H[m], color=sim.COOLING_COLORS_PRINT[m],
             t_max=t_max, t_avg_final=t_avg_final, t_start=t_start, rise=t_max - t_start,
             peak_delta_t=peak_delta_t, delta_t_ok=peak_delta_t <= ctx["max_delta_t"],
             t_to_target=t_discharge,

@@ -1,382 +1,275 @@
-/* style.css -- "paper" theme: CellFire reads like a typeset document rather
-   than a software dashboard -- warm paper background, serif type, ink-toned
-   accents, cards as sheets of paper with a soft lift instead of hard panels. */
+/* style.css -- CellFire "thermal instrument" theme.
+
+   One idea: the interface is a quiet slate instrument housing, and heat is the
+   only saturated colour in it. Everything that is not data stays neutral so
+   the temperature field and the cooling-mode lines carry the page.
+
+   Cooling-mode colours (set from Python, simulation.COOLING_COLORS) run warm
+   to cool with cooling strength: coral = natural, amber = forced air,
+   cyan = liquid. */
 
 :root {
-    --bg: #f2ede0;
-    --paper: #fffdf7;
-    --paper-border: #ddd3ba;
-    --rule: #d8cdb0;
-    --accent: #8b1e2f;
-    --accent-soft: rgba(139, 30, 47, 0.1);
-    --success: #2f6b3a;
-    --text: #2b2820;
-    --text-muted: #746b58;
-    --shadow: 0 1px 2px rgba(43, 40, 32, 0.06), 0 6px 16px rgba(43, 40, 32, 0.07);
-    --serif: "Source Serif 4", Georgia, "Iowan Old Style", "Palatino Linotype", serif;
-    --mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+    --bg: #171d23;
+    --panel: #1f272f;
+    --raised: #28323c;
+    --line: #35414d;
+    --ink: #e4e9ee;
+    --muted: #97a4b0;
+    --focus: #8fd3ff;
+    --ok: #5fd39a;
+    --fail: #ff6b7f;
+    --radius: 10px;
+    --font: "Barlow Semi Condensed", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
-body {
-    background-color: var(--bg);
-    color: var(--text);
-    font-family: var(--serif);
-    background-image:
-        linear-gradient(var(--bg), var(--bg));
+* { box-sizing: border-box; }
+
+html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 16px;
+    margin: 0;
 }
 
-/* faint page texture -- a barely-there grain so large paper fields don't
-   read as flat digital color */
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.5;
-    background-image: radial-gradient(rgba(43, 40, 32, 0.035) 0.6px, transparent 0.6px);
-    background-size: 3px 3px;
+.app-shell {
+    --bs-body-bg: var(--bg);
+    --bs-body-color: var(--ink);
+    --bs-border-color: var(--line);
+    min-height: 100vh;
+    padding: 0 24px 40px;
+    max-width: 1720px;
+    margin: 0 auto;
 }
 
-.app-container {
-    padding: 20px 28px 32px;
-    position: relative;
-    z-index: 1;
-}
-
+/* ------------------------------------------------------------ header */
 .app-header {
-    margin-bottom: 18px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--text);
-}
-
-.app-title {
-    font-family: var(--serif);
-    font-weight: 700;
-    font-style: italic;
-    letter-spacing: -0.01em;
-    margin-bottom: 0;
-    color: var(--text);
-}
-
-.control-card, .viz-card {
-    background-color: var(--paper) !important;
-    border: 1px solid var(--paper-border) !important;
-    border-radius: 3px !important;
-    box-shadow: var(--shadow);
-}
-
-.control-card .card-body {
-    padding: 14px 16px;
-}
-
-.panel-title {
-    font-family: var(--serif);
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--accent);
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--rule);
-    letter-spacing: 0.01em;
-}
-
-label {
-    font-family: "Source Serif 4", Georgia, serif;
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.cooling-checklist {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 6px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 0 16px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
 }
-
-.cooling-label {
-    color: var(--text);
-    font-size: 0.9rem;
-    text-transform: none;
-    margin-left: 6px;
-}
-
-.cooling-checkbox {
-    margin-right: 4px;
-    accent-color: var(--accent);
-}
-
-/* Horizontal layout for the Run Controls cooling checklist (denser than
-   one mode per line) -- the Vehicle-Requirements/Design-Parameters
-   checklists elsewhere keep the default vertical .cooling-checklist. */
-.cooling-checklist-row {
-    flex-direction: row !important;
-    flex-wrap: wrap;
-    gap: 4px 14px !important;
-}
-
-#run-button, .btn-danger {
-    background-color: var(--accent) !important;
-    border-color: var(--accent) !important;
-    font-family: var(--serif);
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    border-radius: 3px !important;
-    box-shadow: none !important;
-}
-#run-button:hover, .btn-danger:hover {
-    background-color: #6e1825 !important;
-    border-color: #6e1825 !important;
-}
-
-.btn-secondary {
-    background-color: var(--paper) !important;
-    border-color: var(--text-muted) !important;
-    color: var(--text) !important;
-    font-family: var(--serif);
-    border-radius: 3px !important;
-    box-shadow: none !important;
-}
-.btn-secondary:hover {
-    background-color: var(--accent-soft) !important;
-    border-color: var(--accent) !important;
-    color: var(--accent) !important;
-}
-
-.time-readout {
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-/* Plotly slider handle / track tweaks */
-.rc-slider-track {
-    background-color: var(--accent) !important;
-}
-.rc-slider-rail {
-    background-color: var(--rule) !important;
-}
-.rc-slider-handle {
-    border-color: var(--accent) !important;
-    background-color: var(--paper) !important;
-}
-.rc-slider-dot {
-    border-color: var(--paper-border) !important;
-}
-.rc-slider-mark-text {
-    color: var(--text-muted) !important;
-}
-
-#run-status {
-    min-height: 18px;
-    font-style: italic;
-}
-
-/* dcc.Dropdown paper theme override (Dash ships a react-select fork with
-   stable classnames: .Select, .Select-control, .Select-menu-outer, ...) */
-.dark-dropdown .Select-control,
-.dark-dropdown .Select-menu-outer {
-    background-color: var(--paper) !important;
-    border-color: var(--paper-border) !important;
-    color: var(--text) !important;
-    font-family: var(--serif);
-}
-.dark-dropdown .Select-value-label,
-.dark-dropdown .Select-placeholder,
-.dark-dropdown input {
-    color: var(--text) !important;
-}
-.dark-dropdown .Select-option {
-    background-color: var(--paper) !important;
-    color: var(--text) !important;
-}
-.dark-dropdown .Select-option.is-focused {
-    background-color: var(--accent-soft) !important;
-}
-.dark-dropdown .Select-arrow {
-    border-color: var(--text-muted) transparent transparent !important;
-}
-
-.report-markdown {
-    color: var(--text);
-    font-family: var(--serif);
+.brand-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.brand { font-size: 1.7rem; font-weight: 700; letter-spacing: 0.01em; }
+.tagline { color: var(--muted); font-size: 1rem; }
+.pack-chip {
     font-size: 0.95rem;
-    line-height: 1.6;
-    max-height: 460px;
-    overflow-y: auto;
-    padding-right: 6px;
-}
-.report-markdown h2 {
-    font-size: 1.15rem;
-    color: var(--accent);
-    margin-top: 4px;
-    font-style: italic;
-}
-.report-markdown h3 {
-    font-size: 1rem;
-    color: var(--text);
-    margin-top: 16px;
-    border-bottom: 1px solid var(--rule);
-    padding-bottom: 4px;
-}
-.report-markdown strong {
-    color: var(--accent);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    white-space: nowrap;
 }
 
-/* Design Parameters panel */
-.param-label {
-    font-family: "Source Serif 4", Georgia, serif;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 4px;
-    display: block;
+/* ------------------------------------------------------------ layout */
+.app-body {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
 }
-
-.dark-input {
-    background-color: var(--paper) !important;
-    border-color: var(--paper-border) !important;
-    color: var(--text) !important;
-    font-family: var(--mono);
-}
-.dark-input:focus {
-    background-color: var(--paper) !important;
-    color: var(--text) !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 0.15rem var(--accent-soft) !important;
-}
-
-.computed-value {
-    font-family: var(--mono);
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--accent);
-}
-
-.params-accordion .accordion-item {
-    background-color: var(--paper) !important;
-    border-color: var(--paper-border) !important;
-}
-.params-accordion .accordion-button {
-    background-color: var(--paper) !important;
-    color: var(--text) !important;
-    font-family: var(--serif);
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    box-shadow: none !important;
-}
-.params-accordion .accordion-button:not(.collapsed) {
-    color: var(--accent) !important;
-    background-color: var(--accent-soft) !important;
-    box-shadow: none !important;
-}
-.params-accordion .accordion-button::after {
-    filter: sepia(60%) saturate(200%) hue-rotate(300deg) brightness(0.7);
-}
-.params-accordion .accordion-body {
-    background-color: var(--paper) !important;
-    padding-top: 16px;
-}
-
-/* Side columns (parameters) stay visible while the page doesn't need to
-   scroll at all in the common case -- kept sticky/scrollable as a fallback
-   for short viewports rather than a primary mechanism. */
-.side-col {
+.setup-panel {
     position: sticky;
     top: 16px;
     max-height: calc(100vh - 32px);
     overflow-y: auto;
-    padding-bottom: 4px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+}
+.setup-block { padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.setup-block:last-child { border-bottom: 0; }
+.setup-groups { padding: 6px 18px 10px; }
+.results { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.app-body > * { min-width: 0; }
+.results-loading { min-width: 0; }
+
+@media (max-width: 1100px) {
+    .app-body { grid-template-columns: minmax(0, 1fr); }
+    .setup-panel { position: static; max-height: none; }
+    .app-shell { padding: 0 16px 32px; }
 }
 
-.playback-card .rc-slider {
-    margin: 0 8px;
+/* ------------------------------------------------------------ panels */
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px 10px;
 }
-
-/* Compact section labels inside the left/right parameter columns -- styled
-   like a running head in a printed document, small caps over a rule */
-.section-header {
-    font-family: var(--serif);
-    font-size: 0.72rem;
-    font-weight: 700;
-    font-style: italic;
-    color: var(--accent);
-    letter-spacing: 0.04em;
-    margin-top: 10px;
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin-bottom: 6px;
-    padding-top: 8px;
-    border-top: 1px solid var(--rule);
+    flex-wrap: wrap;
 }
-.section-header:first-of-type {
-    border-top: none;
-    padding-top: 0;
-    margin-top: 8px;
+.panel-title { font-size: 1.1rem; font-weight: 600; margin: 0; }
+.panel-hint { color: var(--muted); font-size: 0.88rem; }
+
+.section-title { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+.param-label, label.param-label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.slider-value { font-variant-numeric: tabular-nums; font-size: 0.95rem; font-weight: 600; }
+
+/* ------------------------------------------------------------ inputs */
+.field-input, .field-input:focus {
+    background: var(--raised) !important;
+    border: 1px solid var(--line) !important;
+    color: var(--ink) !important;
+    font-family: var(--font);
+    font-variant-numeric: tabular-nums;
+    border-radius: 7px !important;
+    box-shadow: none !important;
+}
+.field-input:focus { border-color: var(--focus) !important; }
+
+.field-dropdown .Select-control,
+.field-dropdown .Select-menu-outer {
+    background: var(--raised) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 7px !important;
+    color: var(--ink) !important;
+}
+.field-dropdown .Select-menu-outer { margin-top: 2px; overflow: hidden; z-index: 30; }
+.field-dropdown .Select-value-label, .field-dropdown .Select-placeholder,
+.field-dropdown .Select--single > .Select-control .Select-value .Select-value-label,
+.field-dropdown input { color: var(--ink) !important; }
+.field-dropdown .Select-option { background: var(--raised) !important; color: var(--ink) !important; }
+.field-dropdown .Select-option.is-focused,
+.field-dropdown .Select-option.is-selected { background: #33404c !important; }
+.field-dropdown .VirtualizedSelectOption { background: var(--raised) !important; color: var(--ink) !important; }
+.field-dropdown .VirtualizedSelectFocusedOption,
+.field-dropdown .VirtualizedSelectOption:hover { background: #33404c !important; }
+.field-dropdown .VirtualizedSelectSelectedOption { font-weight: 600; }
+.field-dropdown .Select-arrow { border-color: var(--muted) transparent transparent !important; }
+.field-dropdown.is-focused:not(.is-open) > .Select-control { border-color: var(--focus) !important; box-shadow: none !important; }
+
+/* sliders */
+.rc-slider-rail { background: var(--line) !important; height: 4px !important; }
+.rc-slider-track { background: var(--ink) !important; height: 4px !important; }
+.rc-slider-handle {
+    width: 16px !important; height: 16px !important; margin-top: -6px !important;
+    background: var(--ink) !important; border: 3px solid var(--bg) !important;
+    box-shadow: 0 0 0 1px var(--muted) !important; opacity: 1 !important;
+}
+.rc-slider-handle:focus-visible, .rc-slider-handle-dragging {
+    box-shadow: 0 0 0 3px var(--focus) !important;
 }
 
-/* Denser dropdown control height for the parameter columns */
-.dark-dropdown-sm .Select-control {
-    min-height: 32px !important;
+/* cooling-mode chips */
+.chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.chip {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px 5px 10px;
+    color: var(--muted); font-size: 0.95rem; transition: border-color .15s, color .15s, background .15s;
 }
-.dark-dropdown-sm .Select-value,
-.dark-dropdown-sm .Select-input,
-.dark-dropdown-sm .Select-placeholder {
-    line-height: 32px !important;
+.chip:has(.chip-input:checked) { color: var(--ink); background: var(--raised); border-color: #4c5a68; }
+.chip:has(.chip-input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.chip-input { position: absolute; opacity: 0; pointer-events: none; }
+.chip-label { display: inline-flex; align-items: center; gap: 7px; }
+.mode-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.chip:not(:has(.chip-input:checked)) .mode-dot { opacity: 0.35; }
+
+/* buttons */
+.run-button, .run-button:focus {
+    background: var(--ink) !important; color: var(--bg) !important;
+    border: 0 !important; border-radius: 8px !important;
+    font-weight: 700; font-size: 1.05rem; padding: 10px 16px; box-shadow: none !important;
+}
+.run-button:hover { background: #fff !important; }
+.run-button:focus-visible, .play-button:focus-visible, .ghost-button:focus-visible {
+    outline: 2px solid var(--focus) !important; outline-offset: 2px;
+}
+.run-status { min-height: 22px; margin-top: 8px; color: var(--muted); font-size: 0.92rem; }
+
+.ghost-button, .ghost-button:focus {
+    background: transparent !important; color: var(--ink) !important;
+    border: 1px solid var(--line) !important; border-radius: 7px !important; box-shadow: none !important;
+}
+.ghost-button:hover { background: var(--raised) !important; }
+
+/* collapsible parameter groups */
+.param-group { border-bottom: 1px solid var(--line); }
+.param-group:last-child { border-bottom: 0; }
+.param-group summary {
+    list-style: none; cursor: pointer; padding: 13px 0; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.param-group summary::-webkit-details-marker { display: none; }
+.param-group summary::after {
+    content: ""; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg); transition: transform .15s; margin-right: 4px;
+}
+.param-group[open] summary::after { transform: rotate(-135deg); }
+.param-group summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.group-body { padding: 0 0 14px; }
+.computed-value { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------ stage */
+.stage { padding-bottom: 14px; }
+.volume-graph { margin: 0 -6px; }
+.stage-hint { color: var(--muted); font-size: 0.92rem; }
+
+.seg { display: inline-flex; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+.seg-label {
+    cursor: pointer; padding: 4px 12px; border-radius: 6px; color: var(--muted);
+    font-size: 0.93rem; margin: 0; white-space: nowrap;
+}
+.seg-label:has(.seg-input:checked) { background: var(--raised); color: var(--ink); }
+.seg-label:has(.seg-input:focus-visible) { outline: 2px solid var(--focus); }
+.seg-input { position: absolute; opacity: 0; pointer-events: none; }
+
+.playback { display: flex; align-items: center; gap: 16px; padding: 6px 4px 0; }
+.playback .timeline { flex: 1 1 auto; min-width: 0; padding: 0 8px; }
+.play-button, .play-button:focus {
+    background: var(--ink) !important; color: var(--bg) !important; border: 0 !important;
+    border-radius: 7px !important; font-weight: 700; min-width: 76px; box-shadow: none !important;
+}
+.time-readout { font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: pre; min-width: 330px; text-align: right; }
+@media (max-width: 700px) {
+    .seg { max-width: 100%; }
+    .seg-label { padding: 4px 8px; font-size: 0.88rem; }
+    .playback { flex-wrap: wrap; }
+    .time-readout { min-width: 0; text-align: left; white-space: normal; width: 100%; }
 }
 
-/* Summary metrics strip */
-.metric-card {
-    background-color: var(--paper) !important;
-    border: 1px solid var(--paper-border) !important;
-    border-radius: 3px !important;
-    box-shadow: var(--shadow);
-}
+/* ------------------------------------------------------------ summary */
+.summary-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+.summary-strip:empty { display: none; }
+.metric-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 16px; }
+.metric-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.metric-mode { font-weight: 600; }
+.verdict { margin-left: auto; font-size: 0.85rem; padding: 2px 9px; border-radius: 999px; border: 1px solid; }
+.verdict.ok { color: var(--ok); border-color: rgba(95, 211, 154, 0.4); }
+.verdict.fail { color: var(--fail); border-color: rgba(255, 107, 127, 0.45); }
+.metric-grid { display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 10px; }
+.metric-label { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.metric-value { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.metric-value.ok { color: var(--ok); }
+.metric-value.fail { color: var(--fail); }
 
-.mode-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 7px;
-    flex-shrink: 0;
-}
+/* ------------------------------------------------------------ report */
+.report-markdown { max-height: 440px; overflow-y: auto; line-height: 1.6; font-size: 1rem; max-width: 92ch; padding-right: 8px; }
+.report-markdown h2 { display: none; }
+.report-markdown h3 { font-size: 1.05rem; font-weight: 600; margin: 18px 0 6px; }
+.report-markdown strong { font-weight: 600; }
+.report-markdown em { color: var(--muted); }
 
-.metric-mode-label {
-    font-family: var(--serif);
-    font-size: 0.78rem;
-    font-weight: 600;
-    font-style: italic;
-    letter-spacing: 0.02em;
-    color: var(--text-muted);
-}
-
-.metric-label {
-    font-family: "Source Serif 4", Georgia, serif;
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-bottom: 2px;
-}
-
-.metric-value {
-    font-family: var(--mono);
-    font-size: 1.15rem;
-    font-weight: 700;
-}
-
-.metric-ok {
-    color: var(--success);
-}
-
-.metric-fail {
-    color: var(--accent);
-}
-
-.metric-neutral {
-    color: var(--text);
-}
+/* ------------------------------------------------------------ misc */
+.modebar-btn path { fill: var(--muted) !important; }
+.modebar-btn:hover path { fill: var(--ink) !important; }
+.dash-spinner, ._dash-loading { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
