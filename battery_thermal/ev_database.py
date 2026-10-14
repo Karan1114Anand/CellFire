@@ -36,55 +36,66 @@ CHEMISTRY_CELL_VOLTAGE = {
 
 BATTERY_OPTIONS = {
     "lfp_19": {"label": "19.2 kWh LFP (Standard Range)", "chemistry": "LFP",
-               "pack_kwh": 19.2, "pack_voltage": 306, "series": 96, "parallel": 1, "cell_ah": 3.0},
+               "pack_kwh": 19.2, "series": 96},
     "lfp_24": {"label": "24.0 kWh LFP (Long Range)", "chemistry": "LFP",
-               "pack_kwh": 24.0, "pack_voltage": 306, "series": 96, "parallel": 1, "cell_ah": 3.8},
+               "pack_kwh": 24.0, "series": 96},
     "lfp_25": {"label": "25.0 kWh LFP (Standard Range)", "chemistry": "LFP",
-               "pack_kwh": 25.0, "pack_voltage": 320, "series": 100, "parallel": 1, "cell_ah": 3.7},
+               "pack_kwh": 25.0, "series": 100},
     "lfp_35": {"label": "35.0 kWh LFP (Long Range)", "chemistry": "LFP",
-               "pack_kwh": 35.0, "pack_voltage": 350, "series": 108, "parallel": 1, "cell_ah": 4.4},
+               "pack_kwh": 35.0, "series": 108},
     "lfp_17": {"label": "17.3 kWh LFP", "chemistry": "LFP",
-               "pack_kwh": 17.3, "pack_voltage": 250, "series": 80, "parallel": 1, "cell_ah": 4.0},
+               "pack_kwh": 17.3, "series": 80},
     "lfp_60": {"label": "60.5 kWh LFP Blade (Long Range)", "chemistry": "LFP",
-               "pack_kwh": 60.5, "pack_voltage": 400, "series": 108, "parallel": 2, "cell_ah": 3.5},
+               "pack_kwh": 60.5, "series": 108},
     "lfp_72": {"label": "71.7 kWh LFP", "chemistry": "LFP",
-               "pack_kwh": 71.7, "pack_voltage": 400, "series": 108, "parallel": 2, "cell_ah": 4.1},
+               "pack_kwh": 71.7, "series": 108},
     "lfp_82": {"label": "82.5 kWh LFP Blade (Long Range)", "chemistry": "LFP",
-               "pack_kwh": 82.5, "pack_voltage": 400, "series": 110, "parallel": 2, "cell_ah": 4.7},
+               "pack_kwh": 82.5, "series": 110},
     "nmc_30": {"label": "30.0 kWh NMC (Medium Range)", "chemistry": "NMC",
-               "pack_kwh": 30.0, "pack_voltage": 320, "series": 96, "parallel": 1, "cell_ah": 3.1},
+               "pack_kwh": 30.0, "series": 96},
     "nmc_40": {"label": "40.5 kWh NMC (Long Range)", "chemistry": "NMC",
-               "pack_kwh": 40.5, "pack_voltage": 340, "series": 96, "parallel": 1, "cell_ah": 4.1},
+               "pack_kwh": 40.5, "series": 96},
     "nmc_34": {"label": "34.5 kWh NMC (Standard Range)", "chemistry": "NMC",
-               "pack_kwh": 34.5, "pack_voltage": 350, "series": 108, "parallel": 1, "cell_ah": 3.0},
+               "pack_kwh": 34.5, "series": 108},
     "nmc_39": {"label": "39.4 kWh NMC (Long Range)", "chemistry": "NMC",
-               "pack_kwh": 39.4, "pack_voltage": 350, "series": 108, "parallel": 1, "cell_ah": 3.4},
+               "pack_kwh": 39.4, "series": 108},
     "nmc_39_kona": {"label": "39.2 kWh NMC", "chemistry": "NMC",
-                     "pack_kwh": 39.2, "pack_voltage": 356, "series": 98, "parallel": 1, "cell_ah": 3.35},
+                     "pack_kwh": 39.2, "series": 98},
     "nmc_50": {"label": "50.3 kWh NMC (Long Range)", "chemistry": "NMC",
-               "pack_kwh": 50.3, "pack_voltage": 380, "series": 104, "parallel": 1, "cell_ah": 3.7},
+               "pack_kwh": 50.3, "series": 104},
     "nmc_38": {"label": "38.0 kWh NMC", "chemistry": "NMC",
-               "pack_kwh": 38.0, "pack_voltage": 350, "series": 96, "parallel": 1, "cell_ah": 3.3},
+               "pack_kwh": 38.0, "series": 96},
     "nmc_59": {"label": "59.0 kWh NMC (Standard Range)", "chemistry": "NMC",
-               "pack_kwh": 59.0, "pack_voltage": 400, "series": 108, "parallel": 2, "cell_ah": 4.1},
+               "pack_kwh": 59.0, "series": 108},
     "nmc_79": {"label": "79.0 kWh NMC (Long Range)", "chemistry": "NMC",
-               "pack_kwh": 79.0, "pack_voltage": 400, "series": 108, "parallel": 2, "cell_ah": 5.5},
+               "pack_kwh": 79.0, "series": 108},
     "nmc_77": {"label": "77.4 kWh NMC (Long Range AWD)", "chemistry": "NMC",
-               "pack_kwh": 77.4, "pack_voltage": 400, "series": 102, "parallel": 3, "cell_ah": 6.3},
+               "pack_kwh": 77.4, "series": 102},
     "nmc_72": {"label": "72.6 kWh NMC (Long Range)", "chemistry": "NMC",
-               "pack_kwh": 72.6, "pack_voltage": 400, "series": 108, "parallel": 2, "cell_ah": 4.9},
+               "pack_kwh": 72.6, "series": 108},
 }
 
-# `series` and `cell_ah` above were authored directly (series sets a realistic
-# pack voltage; cell_ah sets a realistic single-cell capacity for the FDM
-# solver's ~200x140x6mm pouch footprint). `pack_kwh` is the trustworthy
-# real-world figure. Those three over-determine `parallel` and `pack_voltage`,
-# and the hand-authored values for the latter two were NOT self-consistent
-# with the former -- so derive them here instead of trusting hand-entry.
+# Pack figures above are the quoted, trustworthy ones: pack_kwh and series.
+# Everything else is derived so the numbers cannot contradict each other.
+#
+# The thermal solver models ONE pouch cell of ~200 x 140 x 6 mm (168 cm^3).
+# At a realistic pouch-cell energy density that footprint holds ~20 Ah of NMC
+# (~440 Wh/L) or ~16 Ah of LFP (~330 Wh/L). The earlier hand-typed 3-6 Ah
+# values were 18650-sized capacities, which forced absurd 27-51 parallel
+# strings and made the cell generate ~15x too little heat.
+#
+#   string capacity  = pack_kwh / (series * nominal_v)
+#   parallel         = round(string capacity / footprint cell capacity)
+#   cell_ah          = string capacity / parallel      (re-derived, so that
+#                      series * parallel * cell_ah * nominal_v == pack_kwh)
+FOOTPRINT_CELL_AH = {"NMC": 20.0, "LFP": 16.0}
+
 for _key, _b in BATTERY_OPTIONS.items():
     _nominal_v = CHEMISTRY_CELL_VOLTAGE[_b["chemistry"]]["nominal_v"]
+    _string_ah = _b["pack_kwh"] * 1000 / (_b["series"] * _nominal_v)
     _b["pack_voltage"] = round(_b["series"] * _nominal_v)
-    _b["parallel"] = max(1, round(_b["pack_kwh"] * 1000 / (_b["pack_voltage"] * _b["cell_ah"])))
+    _b["parallel"] = max(1, round(_string_ah / FOOTPRINT_CELL_AH[_b["chemistry"]]))
+    _b["cell_ah"] = round(_string_ah / _b["parallel"], 1)
 
 EV_DATABASE = [
     {"id": "tata_tiago_ev", "name": "Tata Tiago EV", "segment": "Hatchback", "drive": "FWD",

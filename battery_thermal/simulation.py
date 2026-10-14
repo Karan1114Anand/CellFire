@@ -53,7 +53,8 @@ ALPHA = K_THERMAL / (RHO * CP)   # thermal diffusivity, m^2/s
 # --------------------------------------------------------------------------
 # Electrical / electrochemical properties
 # --------------------------------------------------------------------------
-Q_CELL_AH = 3.0            # nominal capacity, Ah
+Q_CELL_AH = 3.0            # default representative-cell capacity, Ah
+Q_REF_AH = 3.0             # capacity the R(SoC) table below was measured on, Ah
 
 # R(SoC) empirical lookup table -- published Li-NMC literature "bathtub"
 # curve, values in milliohms at 25 C.
@@ -71,12 +72,21 @@ _R_INTERP = interp1d(_SOC_PTS, _R_PTS_MOHM / 1000.0, kind="cubic", fill_value="e
 CHEMISTRY_R_MULTIPLIER = {"NMC": 1.0, "LFP": 1.15}
 
 
-def resistance(soc: float, T_kelvin: float, chemistry: str = "NMC") -> float:
-    """Internal resistance [ohm] as a function of SoC, mean cell temperature and chemistry."""
+def resistance(soc: float, T_kelvin: float, chemistry: str = "NMC",
+               q_cell_ah: float = Q_REF_AH) -> float:
+    """Internal resistance [ohm] as a function of SoC, mean cell temperature,
+    chemistry and cell capacity.
+
+    The tabulated curve belongs to a ~Q_REF_AH cell. Electrode area (and hence
+    conductance) grows with capacity, so resistance scales as Q_REF_AH/q_cell_ah.
+    Without this a 40 Ah cell would carry a 3 Ah cell's resistance, and the
+    heat generated at a given C-rate would be wrong by the same factor.
+    """
     soc_c = float(np.clip(soc, 0.0, 1.0))
     r_soc = float(_R_INTERP(soc_c)) * CHEMISTRY_R_MULTIPLIER.get(chemistry, 1.0)
+    r_soc *= Q_REF_AH / max(q_cell_ah, 1e-6)
     r = r_soc * (1.0 + 0.005 * (T_kelvin - 298.15))
-    return max(r, 1e-5)
+    return max(r, 1e-6)
 
 
 # --------------------------------------------------------------------------
@@ -93,9 +103,16 @@ COOLING_LABELS = {
     "liquid": "Liquid Cooling",
 }
 COOLING_COLORS = {
-    "natural": "#8b1e2f",     # deep crimson -- worst cooling
-    "forced_air": "#b8860b",  # ochre        -- moderate
-    "liquid": "#1f4e5f",      # ink teal     -- best cooling
+    "natural": "#ff6b4a",     # coral -- weakest cooling
+    "forced_air": "#f2b134",  # amber -- moderate
+    "liquid": "#2ec4d6",      # cyan  -- strongest cooling
+}
+# Same hues, darkened for the white paper of the PDF report (amber and cyan
+# are too faint on white).
+COOLING_COLORS_PRINT = {
+    "natural": "#c9371a",
+    "forced_air": "#a86b00",
+    "liquid": "#0b7f91",
 }
 
 # --------------------------------------------------------------------------
@@ -178,7 +195,7 @@ def _run_single(Lx, Ly, Lz, c_rate, T_amb_C, mode, nx, ny, nz, n_frames,
         for _ in range(n_sub):
             if soc <= soc_end:
                 break
-            R = resistance(soc, float(T.mean()), chemistry)
+            R = resistance(soc, float(T.mean()), chemistry, q_cell_ah)
             qdot_vol = (I ** 2 * R) / V_cell  # W/m^3
             T = _fdm_step(T, dx, dy, dz, dt_internal, h, T_amb, qdot_vol)
             soc -= I * dt_internal / (3600.0 * q_cell_ah)

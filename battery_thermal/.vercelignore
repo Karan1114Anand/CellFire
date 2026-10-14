@@ -1,6 +1,7 @@
-.venv/
-__pycache__/
-*.pyc
-.vercel/
 node_modules/
 PRD.txt
+*.pyc
+__pycache__/
+tests/
+.venv/
+.vercel/
